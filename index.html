@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ElevenLabs Avatar</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #515151;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    #background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('/mnt/data/fa30ebcc-a822-45de-997d-8a97168b5ad7.png') center center no-repeat;
+      background-size: contain;
+      animation: slowRotate 180s linear infinite;
+      z-index: 0;
+      opacity: 0.2;
+      pointer-events: none;
+    }
+    #grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(#aaa 0.5px, transparent 0.5px);
+      background-size: 20px 20px;
+      opacity: 0.4;
+      z-index: 0;
+      pointer-events: none;
+    }
+    canvas#ring {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      height: 100vh;
+      width: 100vw;
+    }
+    #fake-box {
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      max-width: 400px;
+    }
+    #fake-box div {
+      margin-bottom: 30px;
+    }
+    button {
+      background: #888;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #666;
+    }
+  </style>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+</head>
+<body>
+  <div id="background"></div>
+  <div id="grid-overlay"></div>
+  <canvas id="ring"></canvas>
+  <div id="content">
+    <div id="fake-box">
+      <div>Hey there, I'm Avia, I am here to talk to you about the TAD Monitor Platform.</div>
+      <button id="startChat">Start Chat</button>
+    </div>
+  </div>
+  <elevenlabs-convai agent-id="agent_01jyf6g0gqe51b8qc892rks65j"></elevenlabs-convai>
+
+  <script>
+    const c = document.getElementById('ring');
+    const ctx = c.getContext('2d');
+    function resize() {
+      c.width = innerWidth;
+      c.height = innerHeight;
+    }
+    resize();
+    addEventListener('resize', resize);
+
+    let ringSpeedMultiplier = 1.1;
+
+    const R = 280;
+    const N = 600;
+    const pts = Array.from({ length: N }, () => {
+      return {
+        a: Math.random() * Math.PI * 2,
+        r: R + (Math.random() - 0.5) * 40,
+        d: Math.random(),
+        speed: 0.005 + Math.random() * 0.005
+      };
+    });
+
+    const backgroundDots = Array.from({ length: 300 }, () => {
+      return {
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        size: Math.random() * 1.5 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.05,
+        speedY: (Math.random() - 0.5) * 0.05
+      };
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, c.width, c.height);
+
+      backgroundDots.forEach(dot => {
+        dot.x += dot.speedX;
+        dot.y += dot.speedY;
+        if (dot.x < 0) dot.x = c.width;
+        if (dot.x > c.width) dot.x = 0;
+        if (dot.y < 0) dot.y = c.height;
+        if (dot.y > c.height) dot.y = 0;
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(dot.x, dot.y, dot.size, dot.size);
+      });
+
+      ctx.fillStyle = '#fff';
+      pts.forEach(p => {
+        p.a += p.speed * ringSpeedMultiplier;
+        const x = c.width / 2 + Math.cos(p.a) * p.r;
+        const y = c.height / 2 + Math.sin(p.a) * p.r;
+        const s = 1 + p.d * 2;
+        ctx.globalAlpha = 0.3 + p.d * 0.7;
+        ctx.fillRect(x, y, s, s);
+      });
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    document.getElementById('startChat').addEventListener('click', () => {
+      document.querySelector('elevenlabs-convai').shadowRoot.querySelector('button')?.click();
+      ringSpeedMultiplier = 1.3;
+    });
+  </script>
+</body>
+</html>
